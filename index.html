@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoKit — Free Crypto Tools</title>
+    <meta name="description" content="Free crypto tools: live ETH price, gas tracker, quick token swaps. No sign-up required.">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        header { text-align: center; padding: 40px 20px; border-bottom: 1px solid #1a1a2e; margin-bottom: 30px; }
+        header h1 { font-size: 2rem; margin-bottom: 8px; }
+        header h1 span { color: #4fc3f7; }
+        header p { color: #888; font-size: 0.9rem; }
+        .card { background: #111; border: 1px solid #1a1a2e; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+        .card h2 { font-size: 1.1rem; margin-bottom: 16px; color: #fff; }
+        .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .price-item { background: #0a0a0a; border-radius: 8px; padding: 16px; text-align: center; }
+        .price-item .label { font-size: 0.8rem; color: #888; margin-bottom: 4px; }
+        .price-item .value { font-size: 1.5rem; font-weight: 700; color: #fff; }
+        .price-item .change { font-size: 0.85rem; margin-top: 4px; }
+        .change.up { color: #4caf50; }
+        .change.down { color: #f44336; }
+        .gas-section { display: flex; justify-content: space-around; text-align: center; gap: 10px; }
+        .gas-tier { flex: 1; background: #0a0a0a; border-radius: 8px; padding: 14px 8px; }
+        .gas-tier .label { font-size: 0.75rem; color: #888; margin-bottom: 4px; }
+        .gas-tier .gwei { font-size: 1.3rem; font-weight: 700; color: #fff; }
+        .gas-tier .time { font-size: 0.75rem; color: #666; margin-top: 2px; }
+        .swap-section { display: flex; flex-direction: column; gap: 10px; }
+        .swap-row { display: flex; gap: 10px; align-items: center; }
+        .swap-btn { flex: 1; padding: 14px; border-radius: 8px; border: 1px solid #1a1a2e; background: #0a0a0a; color: #fff; cursor: pointer; text-align: center; transition: all 0.2s; font-size: 0.9rem; }
+        .swap-btn:hover { background: #1a1a2e; border-color: #4fc3f7; }
+        .swap-btn .icon { font-size: 1.5rem; margin-bottom: 4px; }
+        .swap-btn .name { font-size: 0.75rem; color: #888; }
+        .footer { text-align: center; padding: 30px; color: #444; font-size: 0.8rem; }
+        .footer a { color: #4fc3f7; text-decoration: none; }
+        .loading { color: #666; font-size: 0.9rem; }
+        .updated { text-align: center; color: #444; font-size: 0.75rem; margin-top: 8px; }
+        @media (max-width: 500px) {
+            .price-grid { grid-template-columns: 1fr; }
+            header h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛠️ Crypto<span>Kit</span></h1>
+            <p>Free crypto tools — prices, gas, swaps. No sign-up.</p>
+        </header>
+
+        <div class="card">
+            <h2>💰 Live Prices</h2>
+            <div class="price-grid">
+                <div class="price-item">
+                    <div class="label">Ethereum (ETH)</div>
+                    <div class="value" id="eth-price"><span class="loading">Loading...</span></div>
+                    <div class="change" id="eth-change"></div>
+                </div>
+                <div class="price-item">
+                    <div class="label">Bitcoin (BTC)</div>
+                    <div class="value" id="btc-price"><span class="loading">Loading...</span></div>
+                    <div class="change" id="btc-change"></div>
+                </div>
+                <div class="price-item">
+                    <div class="label">Solana (SOL)</div>
+                    <div class="value" id="sol-price"><span class="loading">Loading...</span></div>
+                    <div class="change" id="sol-change"></div>
+                </div>
+                <div class="price-item">
+                    <div class="label">Base (ETH)</div>
+                    <div class="value" id="base-price"><span class="loading">Loading...</span></div>
+                    <div class="change" id="base-change"></div>
+                </div>
+            </div>
+            <div class="updated" id="price-updated"></div>
+        </div>
+
+        <div class="card">
+            <h2>⛽ ETH Gas Tracker</h2>
+            <div class="gas-section">
+                <div class="gas-tier">
+                    <div class="label">🐢 Low</div>
+                    <div class="gwei" id="gas-low"><span class="loading">...</span></div>
+                    <div class="time" id="gas-low-time"></div>
+                </div>
+                <div class="gas-tier">
+                    <div class="label">🚗 Standard</div>
+                    <div class="gwei" id="gas-standard"><span class="loading">...</span></div>
+                    <div class="time" id="gas-standard-time"></div>
+                </div>
+                <div class="gas-tier">
+                    <div class="label">🚀 Fast</div>
+                    <div class="gwei" id="gas-fast"><span class="loading">...</span></div>
+                    <div class="time" id="gas-fast-time"></div>
+                </div>
+            </div>
+            <div class="updated" id="gas-updated"></div>
+        </div>
+
+        <div class="card">
+            <h2>🔄 Quick Swap</h2>
+            <p style="color:#888;font-size:0.85rem;margin-bottom:12px;">Best prices from top DEX aggregators. No account needed.</p>
+            <div class="swap-section">
+                <div class="swap-row">
+                    <a href="https://app.1inch.io/#/1/swap/ETH/USDC" target="_blank" rel="noopener" class="swap-btn">
+                        <div class="icon">🔷</div>
+                        <div>1inch</div>
+                        <div class="name">Best aggregator</div>
+                    </a>
+                    <a href="https://paraswap.io/#/ETH-USDC?network=ethereum" target="_blank" rel="noopener" class="swap-btn">
+                        <div class="icon">🪂</div>
+                        <div>Paraswap</div>
+                        <div class="name">DEX aggregator</div>
+                    </a>
+                </div>
+                <div class="swap-row">
+                    <a href="https://matcha.xyz/tokens/ethereum/eth" target="_blank" rel="noopener" class="swap-btn">
+                        <div class="icon">🍵</div>
+                        <div>Matcha</div>
+                        <div class="name">Coinbase's DEX</div>
+                    </a>
+                    <a href="https://swap.defillama.com/" target="_blank" rel="noopener" class="swap-btn">
+                        <div class="icon">🦙</div>
+                        <div>DefiLlama</div>
+                        <div class="name">Multi-chain swaps</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Built by <a href="#">Dussie</a> · Data from CoinGecko & Etherscan · Prices refresh every 60s<br>
+            <span style="margin-top:6px;display:block;">Not financial advice. Always verify before trading.</span>
+        </div>
+    </div>
+
+    <script>
+        // Price fetching (CoinGecko free API)
+        async function fetchPrices() {
+            try {
+                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,bitcoin,solana&vs_currencies=usd&include_24hr_change=true');
+                const data = await res.json();
+
+                updatePrice('eth', data.ethereum.usd, data.ethereum.usd_24h_change);
+                updatePrice('btc', data.bitcoin.usd, data.bitcoin.usd_24h_change);
+                updatePrice('sol', data.solana.usd, data.solana.usd_24h_change);
+                updatePrice('base', data.ethereum.usd, data.ethereum.usd_24h_change);
+
+                document.getElementById('price-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+            } catch(e) {
+                console.error('Price fetch error:', e);
+            }
+        }
+
+        function updatePrice(id, price, change) {
+            const el = document.getElementById(id + '-price');
+            const changeEl = document.getElementById(id + '-change');
+            el.textContent = '$' + price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            if (change !== undefined) {
+                const arrow = change >= 0 ? '↑' : '↓';
+                const cls = change >= 0 ? 'up' : 'down';
+                changeEl.className = 'change ' + cls;
+                changeEl.textContent = arrow + ' ' + Math.abs(change).toFixed(2) + '% (24h)';
+            }
+        }
+
+        // Gas fetching (Etherscan V2 free API)
+        async function fetchGas() {
+            try {
+                const res = await fetch('https://api.etherscan.io/v2/api?chainid=1&module=gastracker&action=gasoracle');
+                const data = await res.json();
+                const r = data.result;
+                const safe = Math.round(parseFloat(r.SafeGasPrice) * 1e9);
+                const standard = Math.round(parseFloat(r.ProposeGasPrice) * 1e9);
+                const fast = Math.round(parseFloat(r.FastGasPrice) * 1e9);
+                document.getElementById('gas-low').textContent = safe + ' Gwei';
+                document.getElementById('gas-standard').textContent = standard + ' Gwei';
+                document.getElementById('gas-fast').textContent = fast + ' Gwei';
+
+                const stdSec = Math.max(15, Math.round(30 * (standard / 15)));
+                document.getElementById('gas-low-time').textContent = '~' + Math.min(600, stdSec * 2) + 's';
+                document.getElementById('gas-standard-time').textContent = '~' + stdSec + 's';
+                document.getElementById('gas-fast-time').textContent = '~' + Math.max(5, Math.round(stdSec / 2)) + 's';
+                document.getElementById('gas-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+            } catch(e) {
+                console.error('Gas fetch error:', e);
+            }
+        }
+
+        // Initial load
+        fetchPrices();
+        fetchGas();
+
+        // Refresh every 60 seconds
+        setInterval(fetchPrices, 60000);
+        setInterval(fetchGas, 60000);
+    </script>
+</body>
+</html>
